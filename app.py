@@ -9,11 +9,12 @@ from notifications import create_notification
 import requests
 from apscheduler.schedulers.blocking import BlockingScheduler
 from logger import get_logger
+from dateutil.tz import gettz
 
 sched = BlockingScheduler()
 log = get_logger('incident-guard')
 
-@sched.scheduled_job('interval', minutes=30)
+@sched.scheduled_job('cron', day_of_week='0-6', timezone='asia/ho_chi_minh', hour='9-19', minute='*', second='0-59/10')
 def check_job():
   log('Checking inactive cards')
   check_in_progress_inactive_cards()
@@ -54,8 +55,6 @@ if __name__ == "__main__":
     for noti_config in list(notification_config.items())
   ]
   setup_notifications(notifications)
-
-  check_in_progress_inactive_cards()
 
   log('Staring scheduler')
   sched.start()

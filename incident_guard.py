@@ -59,7 +59,6 @@ def check_in_progress_inactive_cards():
   to_warn_inactive_cards_count = 0
   for in_progress_card in in_progress_cards:
     in_progress_card_obj = Dict(in_progress_card)
-    log(in_progress_card)
     last_update_time = date_time_from_iso(in_progress_card_obj.dateLastActivity)
     time_since_update = time_since(last_update_time)
     inactive_time_in_seconds = time_since_update.total_seconds()
