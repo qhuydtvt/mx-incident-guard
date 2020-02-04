@@ -67,6 +67,7 @@ def fetch_list_by_name(name):
   list_id = matched_list['id']
   return list_id
 
+
 def check():
   in_progress_cards = fetch_in_progress_cards()
   to_do_cards = fetch_to_do_cards()
