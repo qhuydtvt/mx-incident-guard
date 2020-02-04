@@ -10,6 +10,7 @@ fetch_in_progress_cards = None
 fetch_to_do_cards = None
 in_progress_list_id = None
 notify_inactive_card = None
+notify_lazy_card = None
 
 log = get_logger('incident-guard')
 
@@ -20,6 +21,7 @@ notifications = None
 
 def setup_notifications(notifications):
   global notify_inactive_card
+  global notify_lazy_card
   def inner_notify_inactive_card(trello_card_obj, in_active_minutes):
     json = {
       'message': f'Card **"{trello_card_obj.name}"** is inactive longer than {MAXIMUM_INACTIVE_TIME_IN_MINUTES} minutes',
@@ -30,8 +32,19 @@ def setup_notifications(notifications):
         notification(json)
       except Exception as e:
         log(f'Notification failed: {str(e)}')
+  
+  def inner_notify_lazy_card():
+    json = {
+      'message': f'IN PROGRESS list is empty while there still TO DO cards',
+      'description': f'IN PROGRESS list is empty while there still TO DO cards'
+    }
+    for notification in notifications:
+      try:
+        notification(json)
+      except Exception as e:
+        log(f'Notification failed: {str(e)}')
   notify_inactive_card = inner_notify_inactive_card
-
+  notify_lazy_card = inner_notify_lazy_card
 
 def setup_proxies(trello_config_obj, trello_oath):
   global fetch_trello_board
@@ -54,8 +67,14 @@ def fetch_list_by_name(name):
   list_id = matched_list['id']
   return list_id
 
-def check_in_progress_inactive_cards():
+def check():
   in_progress_cards = fetch_in_progress_cards()
+  to_do_cards = fetch_to_do_cards()
+  check_in_progress_inactive_cards(in_progress_cards)
+  check_lazy_cards(to_do_cards, in_progress_cards)
+  
+
+def check_in_progress_inactive_cards(in_progress_cards):
   to_warn_inactive_cards_count = 0
   for in_progress_card in in_progress_cards:
     in_progress_card_obj = Dict(in_progress_card)
@@ -63,6 +82,13 @@ def check_in_progress_inactive_cards():
     time_since_update = time_since(last_update_time)
     inactive_time_in_seconds = time_since_update.total_seconds()
     if (inactive_time_in_seconds > MAXIMUM_INACTIVE_TIME_IN_SECONDS):
+      log(f'Card {in_progress_card_obj.id} in inactive for longer than allowed, notifying')
       to_warn_inactive_cards_count += 1
       notify_inactive_card(in_progress_card_obj, inactive_time_in_seconds / 60)
   log(f'Inactive cards count: {to_warn_inactive_cards_count}')
+
+
+def check_lazy_cards(to_do_cards, in_progress_cards):
+  if len(in_progress_cards) == 0 and len(to_do_cards) > 0:
+    log(f'Lazy cards spotted')
+    notify_lazy_card()

@@ -4,7 +4,7 @@ from addict import Dict
 from logger import setup_log
 from requests_oauthlib import OAuth1
 from trello import create_fetch_board, create_fetch_list_of_board
-from incident_guard import setup_proxies, setup_notifications, check_in_progress_inactive_cards, setup_notifications
+from incident_guard import setup_proxies, setup_notifications, check
 from notifications import create_notification
 import requests
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -14,10 +14,10 @@ from dateutil.tz import gettz
 sched = BlockingScheduler()
 log = get_logger('incident-guard')
 
-@sched.scheduled_job('cron', day_of_week='0-6', timezone='asia/ho_chi_minh', hour='9-19', minute='0,30')
+@sched.scheduled_job('cron', day_of_week='0-6', timezone='asia/ho_chi_minh', hour='9-18', minute='0,30')
 def check_job():
   log('Checking inactive cards')
-  check_in_progress_inactive_cards()
+  check()
 
 def parse_arguments():
   global trello_config
