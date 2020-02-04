@@ -14,6 +14,7 @@ notify_inactive_card = None
 log = get_logger('incident-guard')
 
 MAXIMUM_INACTIVE_TIME_IN_SECONDS = 1*60*60
+MAXIMUM_INACTIVE_TIME_IN_MINUTES = int(MAXIMUM_INACTIVE_TIME_IN_SECONDS / 60)
 
 notifications = None
 
@@ -21,7 +22,7 @@ def setup_notifications(notifications):
   global notify_inactive_card
   def inner_notify_inactive_card(trello_card_obj, in_active_minutes):
     json = {
-      'message': f'Card **"{trello_card_obj.name}"** is inactive longer than expected',
+      'message': f'Card **"{trello_card_obj.name}"** is inactive longer than {MAXIMUM_INACTIVE_TIME_IN_MINUTES} minutes',
       'description': f'Link: {trello_card_obj.shortUrl}\nInactive time: {int(in_active_minutes)} minutes'
     }
     for notification in notifications:
