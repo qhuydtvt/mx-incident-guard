@@ -14,7 +14,7 @@ from dateutil.tz import gettz
 sched = BlockingScheduler()
 log = get_logger('incident-guard')
 
-@sched.scheduled_job('cron', day_of_week='0-6', timezone='asia/ho_chi_minh', hour='9-18', minute='0,30')
+@sched.scheduled_job('cron', day_of_week='0-5', timezone='asia/ho_chi_minh', hour='9-18', minute='0,30')
 def check_job():
   log('Checking inactive cards')
   check()
