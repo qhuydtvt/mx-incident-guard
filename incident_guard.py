@@ -8,6 +8,7 @@ fetch_trello_board = None
 fetch_list_of_trello_board = None
 fetch_in_progress_cards = None
 fetch_to_do_cards = None
+fetch_on_hold_cards = None
 in_progress_list_id = None
 notify_inactive_card = None
 notify_lazy_card = None
@@ -35,8 +36,8 @@ def setup_notifications(notifications):
   
   def inner_notify_lazy_card():
     json = {
-      'message': f'IN PROGRESS list is empty while there still TO DO cards',
-      'description': f'IN PROGRESS list is empty while there still TO DO cards'
+      'message': f'IN PROGRESS list is empty while there still TO DO or ON HOLD cards',
+      'description': f'IN PROGRESS list is empty while there still TO DO or ON HOLD cards'
     }
     for notification in notifications:
       try:
@@ -51,6 +52,7 @@ def setup_proxies(trello_config_obj, trello_oath):
   global fetch_list_of_trello_board
   global fetch_in_progress_cards
   global fetch_to_do_cards
+  global fetch_on_hold_cards
 
   fetch_trello_board = create_fetch_board(trello_config_obj.boardId, trello_oath)
   fetch_list_of_trello_board = create_fetch_list_of_board(trello_config_obj.boardId, trello_oath)
@@ -58,7 +60,9 @@ def setup_proxies(trello_config_obj, trello_oath):
   fetch_in_progress_cards = create_fetch_list_cards(in_progress_list_id, trello_oath)
 
   to_do_list_id = fetch_list_by_name('TODO')
+  on_hold_list_id = fetch_list_by_name('ON HOLD')
   fetch_to_do_cards = create_fetch_list_cards(to_do_list_id, trello_oath)
+  fetch_on_hold_cards = create_fetch_list_cards(on_hold_list_id, trello_oath)
 
 
 def fetch_list_by_name(name):
@@ -71,9 +75,10 @@ def fetch_list_by_name(name):
 def check():
   in_progress_cards = fetch_in_progress_cards()
   to_do_cards = fetch_to_do_cards()
+  on_hold_cards = fetch_on_hold_cards()
   check_in_progress_inactive_cards(in_progress_cards)
-  check_lazy_cards(to_do_cards, in_progress_cards)
-  
+  check_lazy_cards(to_do_cards, in_progress_cards, on_hold_cards)
+
 
 def check_in_progress_inactive_cards(in_progress_cards):
   to_warn_inactive_cards_count = 0
@@ -89,7 +94,7 @@ def check_in_progress_inactive_cards(in_progress_cards):
   log(f'Inactive cards count: {to_warn_inactive_cards_count}')
 
 
-def check_lazy_cards(to_do_cards, in_progress_cards):
-  if len(in_progress_cards) == 0 and len(to_do_cards) > 0:
+def check_lazy_cards(to_do_cards, in_progress_cards, on_hold_cards):
+  if len(in_progress_cards) == 0 and (len(to_do_cards) > 0 or len(on_hold_cards) > 0):
     log(f'Lazy cards spotted')
     notify_lazy_card()
