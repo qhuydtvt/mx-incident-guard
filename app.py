@@ -14,11 +14,6 @@ from dateutil.tz import gettz
 sched = BlockingScheduler()
 log = get_logger('incident-guard')
 
-@sched.scheduled_job('cron', day_of_week='0-5', timezone='asia/ho_chi_minh', hour='9-18', minute='0,30')
-def check_job():
-  log('Checking inactive cards')
-  check()
-
 def parse_arguments():
   global trello_config
   global notifications
@@ -32,8 +27,9 @@ def parse_arguments():
 
   trello_config = config_obj.trello
   notification_config = config_obj.notifications
+  cronjob_config = config_obj.cronjob
 
-  return trello_config, notification_config
+  return trello_config, notification_config, cronjob_config
 
 def setup_trello_oath1(trello_config):
   trello_api_key = trello_config.apiKey
@@ -42,7 +38,7 @@ def setup_trello_oath1(trello_config):
   return trello_oath
 
 if __name__ == "__main__":
-  trello_config, notification_config = parse_arguments()
+  trello_config, notification_config, cronjob_config = parse_arguments()
   
   setup_log('incident-guard')
 
@@ -55,6 +51,11 @@ if __name__ == "__main__":
     for noti_config in list(notification_config.items())
   ]
   setup_notifications(notifications)
+
+  @sched.scheduled_job('cron', day_of_week=cronjob_config.dayOfWeek, timezone='asia/ho_chi_minh', hour=cronjob_config.hour, minute=cronjob_config.minute)
+  def check_job():
+    log('Checking inactive cards')
+    check()
 
   log('Staring scheduler')
   sched.start()
