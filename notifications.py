@@ -23,7 +23,8 @@ def create_notification(notification_type, notification_config):
       json = {
         'chat_id': chat_id,
         'text': f'{message}.\n\nDetails: \n{description}',
-        'parse_mode': 'Markdown'
+        'parse_mode': 'Markdown',
+        'disable_web_page_preview': True
       }
       response = requests.post(noti_url, json=json)
       if response.status_code >= 400:
